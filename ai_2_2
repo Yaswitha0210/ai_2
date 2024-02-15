@@ -1,0 +1,51 @@
+import numpy as np
+import pandas as pd
+
+df = pd.read_csv('HousingData.csv', skiprows=1, header=None, names=['CRIM', 'ZN', 'INDUS', 'CHAS', 'NOX', 'RM', 'AGE', 'DIS', 'RAD', 'TAX', 'PTRATIO', 'B', 'LSTAT', 'MEDV'], na_values='NA')
+df.dropna(inplace=True)
+
+def lr_analytic(X, y):
+    X = np.column_stack((np.ones(len(X)), X))
+    coeffs = np.linalg.inv(X.T.dot(X)).dot(X.T).dot(y)
+    return coeffs
+
+def lr_gd(X, y, lr, num_iter):
+    n_s, n_f = X.shape
+    coeffs = np.zeros(n_f)
+    
+    for _ in range(num_iter):
+        error = np.dot(X, coeffs) - y
+        gradient = np.dot(X.T, error) / n_s
+        coeffs -= lr * gradient
+    
+    return coeffs
+
+def lr_sgd(X, y, lr, num_iter):
+    n_s, n_f = X.shape
+    coeffs = np.zeros(n_f)
+    
+    for _ in range(num_iter):
+        for i in range(n_s):
+            error = np.dot(X[i], coeffs) - y[i]
+            gradient = X[i] * error
+            coeffs -= lr * gradient
+    
+    return coeffs
+
+corr = df.corr()['MEDV'].abs().sort_values(ascending=False)
+best_attr = corr.index[1]
+
+X_data = df[best_attr].values.reshape(-1, 1)
+y_data = df['MEDV'].values
+
+lr = 0.0001
+num_iter = 1000
+
+coeff_analytic = lr_analytic(X_data, y_data)
+coeff_gd = lr_gd(X_data, y_data, lr, num_iter)
+coeff_sgd = lr_sgd(X_data, y_data, lr, num_iter)
+
+print("Best attribute:", best_attr)
+print("Analytic coefficients:", coeff_analytic)
+print("Gradient Descent (Full-batch) coefficients:", coeff_gd)
+print("Stochastic Gradient Descent coefficients:", coeff_sgd)
