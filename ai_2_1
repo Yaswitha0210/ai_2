@@ -1,0 +1,88 @@
+import numpy as np
+
+x = np.array([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+y = np.array([1, 3, 2, 5, 7, 8, 8, 9, 10, 12])
+
+def analytic_lr(x, y):
+    n = len(x)
+    x_mean = np.mean(x)
+    y_mean = np.mean(y)
+    
+    num = np.sum((x - x_mean) * (y - y_mean))
+    denom = np.sum((x - x_mean) ** 2)
+    m = num / denom
+    c = y_mean - m * x_mean
+    
+    y_pred = m * x + c
+    sse = np.sum((y - y_pred) ** 2)
+    
+    ss_total = np.sum((y - y_mean) ** 2)
+    r_sq = 1 - (sse / ss_total)
+    
+    return sse, r_sq
+
+def full_gd_lr(x, y, lr, iterations):
+    n = len(x)
+    m = 0
+    c = 0
+    
+    for _ in range(iterations):
+        y_pred = m * x + c
+        dm = (-2/n) * np.sum(x * (y - y_pred))
+        dc = (-2/n) * np.sum(y - y_pred)
+        
+        m -= lr * dm
+        c -= lr * dc
+    
+    y_pred_final = m * x + c
+    sse = np.sum((y - y_pred_final) ** 2)
+    
+    y_mean = np.mean(y)
+    ss_total = np.sum((y - y_mean) ** 2)
+    r_sq = 1 - (sse / ss_total)
+    
+    return sse, r_sq
+
+def stochastic_gd_lr(x, y, lr, iterations):
+    n = len(x)
+    m = 0
+    c = 0
+    
+    for _ in range(iterations):
+        for i in range(n):
+            y_pred = m * x[i] + c
+            dm = (-2) * x[i] * (y[i] - y_pred)
+            dc = (-2) * (y[i] - y_pred)
+            
+            m -= lr * dm
+            c -= lr * dc
+    
+    y_pred_final = m * x + c
+    sse = np.sum((y - y_pred_final) ** 2)
+    
+    y_mean = np.mean(y)
+    ss_total = np.sum((y - y_mean) ** 2)
+    r_sq = 1 - (sse / ss_total)
+    
+    return sse, r_sq
+
+lr = 0.01
+iterations = 1000
+lr_stochastic = 0.01
+iterations_stochastic = 100
+
+sse_analytic, r_sq_analytic = analytic_lr(x, y)
+sse_gd_full, r_sq_gd_full = full_gd_lr(x, y, lr, iterations)
+sse_gd_stochastic, r_sq_gd_stochastic = stochastic_gd_lr(x, y, lr_stochastic, iterations_stochastic)
+
+print("Analytic solution:")
+print("SSE:", sse_analytic)
+print("R squared:", r_sq_analytic)
+
+print("\nFull-batch Gradient Descent:")
+print("SSE:", sse_gd_full)
+print("R squared:", r_sq_gd_full)
+
+print("\nStochastic Gradient Descent:")
+print("SSE:", sse_gd_stochastic)
+print("R squared:", r_sq_gd_stochastic)
